@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BED Calculator — Radiobiology Dose Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f8fa;
+    --white: #ffffff;
+    --border: #e2e6ec;
+    --accent: #2563eb;
+    --accent-light: #eff4ff;
+    --accent2: #0f7a5a;
+    --accent2-light: #edfaf4;
+    --accent3: #7c3aed;
+    --accent3-light: #f5f0ff;
+    --text: #111827;
+    --muted: #6b7280;
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+  }
+
+  header {
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .preset-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 580px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  label .unit {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  input[type="number"] {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .calc-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: 7px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 13px;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .calc-btn:hover { background: #1d4ed8; }
+  .calc-btn:active { transform: scale(0.99); }
+
+  .error-msg {
+    background: var(--danger-light);
+    border: 1px solid #fca5a5;
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12px;
+    margin-top: 14px;
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  .results { display: none; }
+  .results.visible {
+    display: block;
+    animation: fadeUp 0.35s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  @media (max-width: 580px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+
+  .result-card {
+    border-radius: 8px;
+    padding: 22px 24px;
+    border: 1px solid transparent;
+  }
+
+  .result-card.bed      { background: var(--accent-light);  border-color: #bfdbfe; }
+  .result-card.eqd2     { background: var(--accent2-light); border-color: #a7f3d0; }
+  .result-card.converted {
+    background: var(--accent3-light);
+    border-color: #ddd6fe;
+    grid-column: 1 / -1;
+  }
+
+  .result-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .result-card.bed .result-label      { color: var(--accent); }
+  .result-card.eqd2 .result-label     { color: var(--accent2); }
+  .result-card.converted .result-label { color: var(--accent3); }
+
+  .result-value {
+    font-family: 'Lora', serif;
+    font-size: 2.8rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .result-unit { font-size: 12px; color: var(--muted); }
+
+  .converted-inner {
+    display: flex;
+    align-items: flex-end;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .result-card.converted .result-value { font-size: 3.2rem; }
+
+  .converted-details {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.9;
+    padding-bottom: 2px;
+  }
+
+  .formula-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 2;
+  }
+
+  .formula-box strong { color: var(--text); font-weight: 600; }
+
+  /* Nomogram row styles */
+  .nomo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 32px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .nomo-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    flex: 1;
+  }
+
+  .nomo-badges {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .nomo-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nomo-timepoint {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .nomo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .nomo-pct {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    margin-left: -2px;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  .nomo-row-wrap {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .nomo-badges-wrap {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer {
+    margin-top: 48px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="eyebrow">Radiation Oncology Tools</div>
+    <h1>Prostate Cancer Clinical Calculators</h1>
+    <p class="subtitle">PSA Doubling Time &nbsp;·&nbsp; BED / EQD2 &nbsp;·&nbsp; MSKCC Nomograms</p>
+  </header>
+
+  <!-- ── Quick Navigation ── -->
+  <nav style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:40px;">
+    <a href="#section-psa"    style="text-decoration:none; font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-light); border:1px solid var(--accent); border-radius:20px; padding:7px 16px; transition:background 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-light)';this.style.color='var(--accent)'">PSA Doubling Time</a>
+    <a href="#section-bed"    style="text-decoration:none; font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-light); border:1px solid var(--accent); border-radius:20px; padding:7px 16px; transition:background 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-light)';this.style.color='var(--accent)'">BED / EQD2</a>
+    <a href="#section-preop"  style="text-decoration:none; font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-light); border:1px solid var(--accent); border-radius:20px; padding:7px 16px; transition:background 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-light)';this.style.color='var(--accent)'">Pre-op Nomogram</a>
+    <a href="#section-postop" style="text-decoration:none; font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-light); border:1px solid var(--accent); border-radius:20px; padding:7px 16px; transition:background 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-light)';this.style.color='var(--accent)'">Post-op Nomogram</a>
+  </nav>
+
+  <!-- ── PSA Doubling Time Calculator ── -->
+  <div id="section-psa" style="margin-bottom: 48px;">
+    <div class="eyebrow" style="margin-bottom:10px;">AI-Assisted Tool</div>
+    <h2 style="font-family:'Lora',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; margin-bottom:6px;">PSA Doubling Time Calculator</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:28px;">Upload a screenshot of a PSA table. Claude will extract the values and calculate PSA doubling time using log-linear regression.</p>
+
+    <div class="card">
+      <div class="section-label">Paste PSA Table Screenshot</div>
+
+      <div id="psaPasteBox"
+        contenteditable="true"
+        tabindex="0"
+        style="min-height:140px; border:2px solid var(--border); border-radius:8px; padding:16px; font-size:13px; color:var(--muted); outline:none; transition:border-color 0.2s; cursor:text;"
+        onpaste="handlePsaPaste(event)"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'"
+      ></div>
+
+      <button class="calc-btn" id="psaSubmitBtn" onclick="submitPsaImage()" style="margin-top:20px;">Analyze with Claude</button>
+      <div class="error-msg" id="psaError"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="psaResults" style="display:none;">
+      <div class="card">
+        <div class="section-label">Extracted PSA Values</div>
+        <div id="psaTable" style="margin-bottom:20px; font-size:13px;"></div>
+
+        <div class="section-label">PSA Doubling Time</div>
+        <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
+          <div>
+            <div style="font-family:'Lora',serif; font-size:3rem; font-weight:600; line-height:1; color:var(--text);" id="psaDT">—</div>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px;">months (log-linear regression)</div>
+          </div>
+          <div id="psaDTDetail" style="font-size:12px; color:var(--muted); line-height:1.9;"></div>
+        </div>
+
+        <div id="psaInterpretation" style="font-size:13px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:14px 18px; line-height:1.7;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="section-bed" style="border-top: 2px solid var(--border); padding-top: 40px;">
+
+  <div class="eyebrow" style="margin-bottom:10px;">Radiobiology Tool</div>
+  <h2 style="font-family:'Lora',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; margin-bottom:24px;">BED &amp; EQD2 Calculator</h2>
+
+  <div class="card">
+    <div class="section-label">α/β Presets</div>
+    <div class="presets">
+      <button class="preset-btn" onclick="setPreset(10)">Tumour &nbsp;(α/β = 10)</button>
+      <button class="preset-btn" onclick="setPreset(3)">Late effects &nbsp;(α/β = 3)</button>
+    </div>
+
+    <div class="section-label">Input Parameters</div>
+    <div class="grid-3" style="margin-bottom:20px;">
+      <div class="field">
+        <label>Total Dose <span class="unit">(Gy)</span></label>
+        <input type="number" id="totalDose" min="0" step="0.1">
+        <div class="hint">Total prescribed dose</div>
+      </div>
+      <div class="field">
+        <label>No. of Fractions</label>
+        <input type="number" id="nFractions" min="1" step="1">
+        <div class="hint">Original fractionation</div>
+      </div>
+      <div class="field">
+        <label>α/β Ratio <span class="unit">(Gy)</span></label>
+        <input type="number" id="alphaBeta" min="0.1" step="0.1">
+        <div class="hint">Tissue-specific parameter</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Conversion Target</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Target No. of Fractions</label>
+        <input type="number" id="targetFractions" min="1" step="1">
+        <div class="hint">Convert to this schedule</div>
+      </div>
+      <div class="field" style="justify-content:center;">
+        <div class="hint" style="line-height:1.8; margin-top:22px;">Finds the total dose in the target schedule that delivers an equivalent BED to the original regimen.</div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Calculate BED &amp; Convert</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="section-label">Results</div>
+      <div class="results-grid">
+        <div class="result-card bed">
+          <div class="result-label">Biologically Effective Dose</div>
+          <div class="result-value" id="bedValue">—</div>
+          <div class="result-unit">Gy (BED)</div>
+        </div>
+        <div class="result-card eqd2">
+          <div class="result-label">EQD2</div>
+          <div class="result-value" id="eqd2Value">—</div>
+          <div class="result-unit">Gy (2 Gy equivalent)</div>
+        </div>
+        <div class="result-card converted">
+          <div class="result-label">Equivalent Dose — Converted Schedule</div>
+          <div class="converted-inner">
+            <div>
+              <div class="result-value" id="convertedDose">—</div>
+              <div class="result-unit">Gy total</div>
+            </div>
+            <div class="converted-details" id="convertedDetails"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="summaryLine" style="font-size:13px; color:var(--text); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:14px 18px; margin-bottom:14px; line-height:1.6;"></div>
+
+      <div class="formula-box">
+        <strong>Formulae used</strong><br>
+        BED = D × (1 + d / (α/β)) &nbsp;·&nbsp; d = dose per fraction = D / n<br>
+        EQD2 = BED / (1 + 2 / (α/β))<br>
+        Converted dose D′ solved from: BED = D′ × (1 + (D′/n′) / (α/β))
+      </div>
+    </div>
+  </div>
+
+  </div><!-- end BED wrapper -->
+
+  <!-- ── MSKCC Nomogram Section ── -->
+  <div id="section-preop" style="margin-top: 56px; border-top: 2px solid var(--border); padding-top: 40px;">
+    <div class="eyebrow" style="margin-bottom:10px;">Prediction Tool</div>
+    <h2 style="font-family:'Lora',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; margin-bottom:6px;">MSKCC Pre-operative Prostate Cancer Nomogram</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:28px;">Kattan et al. Coefficients sourced from <a href="https://www.mskcc.org/nomograms/prostate/pre_op/coefficients" target="_blank" style="color:var(--accent);">mskcc.org</a>. Last updated December 2024.</p>
+
+    <!-- AI Autofill Panel — Pre-op -->
+    <div class="card" style="border:2px dashed var(--accent); background:var(--accent-light);">
+      <div class="section-label" style="color:var(--accent);">✦ AI Auto-fill (Pre-op Nomogram)</div>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Paste or type a clinical summary (e.g. "68yo male, PSA 7.2, T2a, Gleason 3+4, 4/12 cores positive") or paste a screenshot, and Claude will extract and populate the fields below.</p>
+
+      <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:12px;">
+        <div style="flex:1;">
+          <div id="preop_pasteBox"
+            contenteditable="true"
+            tabindex="0"
+            style="min-height:80px; border:1.5px solid var(--border); border-radius:8px; padding:12px 14px; font-size:13px; color:var(--muted); outline:none; background:var(--white); transition:border-color 0.2s; cursor:text; line-height:1.5;"
+            onpaste="handlePreopPaste(event)"
+            oninput="if(this.innerText.trim()) preop_pendingText=this.innerText.trim()"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'"
+          ></div>
+        </div>
+        <button onclick="clearPreopAI()" title="Clear" style="flex-shrink:0; background:none; border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:18px; cursor:pointer; color:var(--muted); transition:color 0.15s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+      </div>
+
+      <button class="calc-btn" id="preop_aiBtn" onclick="submitPreopAI()" style="background:var(--accent); margin-top:0;">Auto-fill with Claude</button>
+      <div class="error-msg" id="preop_aiError"></div>
+      <div id="preop_aiSuccess" style="display:none; margin-top:12px; padding:10px 14px; background:#edfaf4; border:1px solid #a7f3d0; border-radius:6px; font-size:12px; color:var(--accent2); line-height:1.7;"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Patient Parameters</div>
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="field">
+          <label>Age <span class="unit">(years)</span></label>
+          <input type="number" id="n_age" min="18" max="100" step="1">
+        </div>
+        <div class="field">
+          <label>PSA <span class="unit">(ng/mL)</span></label>
+          <input type="number" id="n_psa" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label>Clinical Stage</label>
+          <select id="n_stage" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="1">T1c</option>
+            <option value="2a">T2a</option>
+            <option value="2b">T2b</option>
+            <option value="2c">T2c</option>
+            <option value="3">T3+</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="field">
+          <label>Gleason Primary Pattern</label>
+          <select id="n_g1" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Gleason Secondary Pattern</label>
+          <select id="n_g2" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Positive Cores</label>
+          <input type="number" id="n_pos" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Total Cores</label>
+          <input type="number" id="n_total" min="1" step="1">
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcNomogram()">Calculate Pre-operative Nomogram</button>
+      <div class="error-msg" id="n_errorMsg"></div>
+    </div>
+
+    <div class="results" id="n_results">
+      <div class="card" style="padding:0; overflow:hidden;">
+
+        <!-- Primary Treatment Outcomes -->
+        <div style="padding:28px 32px 0;">
+          <h3 style="font-family:'Lora',serif; font-size:1.25rem; font-weight:600; color:var(--text); margin-bottom:20px;">Primary Treatment Outcomes</h3>
+        </div>
+
+        <!-- 15-yr CSS row -->
+        <div class="nomo-row">
+          <span class="nomo-label">15-Year Prostate Cancer-Specific Survival</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-timepoint">15 YR</span>
+              <span class="nomo-badge" id="n_css15">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+
+        <!-- PFS row -->
+        <div class="nomo-row">
+          <span class="nomo-label">Progression-Free Probability After Radical Prostatectomy</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-timepoint">5 YR</span>
+              <span class="nomo-badge" id="n_pfs5">—</span><span class="nomo-pct">%</span>
+            </span>
+            <span class="nomo-badge-group">
+              <span class="nomo-timepoint">10 YR</span>
+              <span class="nomo-badge" id="n_pfs10">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+
+        <!-- Extent of Disease -->
+        <div style="padding:28px 32px 0;">
+          <h3 style="font-family:'Lora',serif; font-size:1.25rem; font-weight:600; color:var(--text); margin-bottom:4px;">Extent of Disease Probability</h3>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">Each extent-of-disease probability percentage is an independent prediction. We therefore would not expect these percentages to equal 100.</p>
+        </div>
+
+        <div class="nomo-row">
+          <span class="nomo-label">Organ-Confined Disease</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-badge" id="n_oc">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+        <div class="nomo-row">
+          <span class="nomo-label">Extracapsular Extension</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-badge" id="n_ece">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+        <div class="nomo-row">
+          <span class="nomo-label">Lymph Node Involvement</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-badge" id="n_lni">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+        <div class="nomo-row" style="border-bottom:none;">
+          <span class="nomo-label">Seminal Vesicle Invasion</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-badge" id="n_svi">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+
+        <div style="padding:20px 32px;">
+          <div class="formula-box">
+            <strong>Model</strong>: MSKCC Pre-operative Nomogram (Cores version) using restricted cubic spline for PSA (knots: 0.2, 4.8, 7.35, 307 ng/mL). Logistic regression for pathologic stage; Weibull survival regression for BCR-free and cancer-specific survival. This tool is intended for informational purposes only and does not replace clinical judgment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MSKCC Post-operative Nomogram Section ── -->
+  <div id="section-postop" style="margin-top: 56px; border-top: 2px solid var(--border); padding-top: 40px;">
+    <div class="eyebrow" style="margin-bottom:10px;">Prediction Tool</div>
+    <h2 style="font-family:'Lora',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; margin-bottom:6px;">MSKCC Post-operative Prostate Cancer Nomogram</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:28px;">Kattan et al. Coefficients sourced from <a href="https://www.mskcc.org/nomograms/prostate/post_op/coefficients" target="_blank" style="color:var(--accent);">mskcc.org</a>. Last updated December 2024. Predicts BCR-free survival at 5 &amp; 10 years and 15-year cancer-specific survival conditional on time already elapsed since surgery.</p>
+
+    <!-- AI Autofill Panel — Post-op -->
+    <div class="card" style="border:2px dashed var(--accent); background:var(--accent-light);">
+      <div class="section-label" style="color:var(--accent);">✦ AI Auto-fill (Post-op Nomogram)</div>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Paste or type a clinical summary (e.g. "72yo, pre-op PSA 9.1, T2c, Gleason 4+3 on biopsy, path Gleason 4+4, positive margins, no ECE, no SVI, no LNI, 14 months post-surgery") or paste a screenshot, and Claude will populate the fields below.</p>
+
+      <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:12px;">
+        <div style="flex:1;">
+          <div id="postop_pasteBox"
+            contenteditable="true"
+            tabindex="0"
+            style="min-height:80px; border:1.5px solid var(--border); border-radius:8px; padding:12px 14px; font-size:13px; color:var(--muted); outline:none; background:var(--white); transition:border-color 0.2s; cursor:text; line-height:1.5;"
+            onpaste="handlePostopPaste(event)"
+            oninput="if(this.innerText.trim()) postop_pendingText=this.innerText.trim()"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'"
+          ></div>
+        </div>
+        <button onclick="clearPostopAI()" title="Clear" style="flex-shrink:0; background:none; border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:18px; cursor:pointer; color:var(--muted); transition:color 0.15s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+      </div>
+
+      <button class="calc-btn" id="postop_aiBtn" onclick="submitPostopAI()" style="background:var(--accent); margin-top:0;">Auto-fill with Claude</button>
+      <div class="error-msg" id="postop_aiError"></div>
+      <div id="postop_aiSuccess" style="display:none; margin-top:12px; padding:10px 14px; background:#edfaf4; border:1px solid #a7f3d0; border-radius:6px; font-size:12px; color:var(--accent2); line-height:1.7;"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Pre-operative Information</div>
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="field">
+          <label>Age at Surgery <span class="unit">(years)</span></label>
+          <input type="number" id="po_age" min="18" max="100" step="1">
+        </div>
+        <div class="field">
+          <label>Pre-op PSA <span class="unit">(ng/mL)</span></label>
+          <input type="number" id="po_psa" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label>Months Since Surgery</label>
+          <input type="number" id="po_months" min="0" step="1">
+          <div class="hint">Used for conditional survival (0 = at time of surgery)</div>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="field">
+          <label>Pre-op Clinical Stage <span class="unit">(optional)</span></label>
+          <select id="po_cstage" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="1">T1c</option>
+            <option value="2a">T2a</option>
+            <option value="2b">T2b</option>
+            <option value="2c">T2c</option>
+            <option value="3">T3+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Pre-op Biopsy Gleason Primary <span class="unit">(optional)</span></label>
+          <select id="po_bg1" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Pre-op Biopsy Gleason Secondary <span class="unit">(optional)</span></label>
+          <select id="po_bg2" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Pathologic / Surgical Findings</div>
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="field">
+          <label>Pathologic Gleason Primary</label>
+          <select id="po_pg1" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Pathologic Gleason Secondary</label>
+          <select id="po_pg2" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Surgical Margin Status</label>
+          <select id="po_margin" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="0">Negative</option>
+            <option value="1">Positive</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Extracapsular Extension</label>
+          <select id="po_ece" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="0">Absent</option>
+            <option value="1">Present</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Seminal Vesicle Invasion</label>
+          <select id="po_svi" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="0">Absent</option>
+            <option value="1">Present</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Lymph Node Involvement</label>
+          <select id="po_lni" style="background:var(--white);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px 14px;width:100%;outline:none;">
+            <option value="">—</option>
+            <option value="0">Absent</option>
+            <option value="1">Present</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calcPostopNomogram()">Calculate Post-operative Nomogram</button>
+      <div class="error-msg" id="po_errorMsg"></div>
+    </div>
+
+
+    <div class="results" id="po_results">
+      <div class="card" style="padding:0; overflow:hidden;">
+
+        <div style="padding:28px 32px 16px; background:#f0f4ff; border-bottom:1px solid var(--border);">
+          <h3 style="font-family:'Lora',serif; font-size:1.4rem; font-weight:700; color:var(--text); margin-bottom:4px;">Your Results</h3>
+          <p id="po_condNote" style="font-size:13px; color:var(--muted);"></p>
+        </div>
+
+        <!-- BCR-free row: 5yr, 10yr -->
+        <div class="nomo-row nomo-row-wrap">
+          <span class="nomo-label">Probability of Remaining Recurrence-Free After Surgery</span>
+          <span class="nomo-badges nomo-badges-wrap">
+            <span class="nomo-badge-group">
+              <span class="nomo-timepoint">5 YR</span>
+              <span class="nomo-badge" id="po_pfs5">—</span><span class="nomo-pct">%</span>
+            </span>
+            <span class="nomo-badge-group">
+              <span class="nomo-timepoint">10 YR</span>
+              <span class="nomo-badge" id="po_pfs10">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+
+        <!-- 15-yr CSS -->
+        <div class="nomo-row" style="border-bottom:none;">
+          <span class="nomo-label">15-Year Prostate Cancer-Specific Survival</span>
+          <span class="nomo-badges">
+            <span class="nomo-badge-group">
+              <span class="nomo-timepoint">15 YR</span>
+              <span class="nomo-badge" id="po_css15">—</span><span class="nomo-pct">%</span>
+            </span>
+          </span>
+        </div>
+
+        <div style="padding:20px 32px;">
+          <div class="formula-box">
+            <strong>Model</strong>: MSKCC Post-operative Nomogram (with Clinical Stage &amp; Grade) using restricted cubic spline for PSA (knots: 0.2, 4.8, 7.35, 307 ng/mL). Weibull survival regression for BCR-free and cancer-specific survival. Predictions are conditional on time already elapsed since surgery. This tool is intended for informational purposes only and does not replace clinical judgment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    For clinical decision-making, always consult a qualified radiation oncologist and urologist.<br>
+    BED calculations assume the standard LQ model without repair corrections. Nomogram predictions are based on MSKCC institutional data.
+  </footer>
+</div>
+
+<script>
+  function setPreset(ab) {
+    document.getElementById('alphaBeta').value = ab;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('visible');
+    document.getElementById('results').classList.remove('visible');
+  }
+
+  function clearError() {
+    document.getElementById('errorMsg').classList.remove('visible');
+  }
+
+  function calculate() {
+    clearError();
+
+    const D      = parseFloat(document.getElementById('totalDose').value);
+    const n      = parseFloat(document.getElementById('nFractions').value);
+    const ab     = parseFloat(document.getElementById('alphaBeta').value);
+    const nPrime = parseFloat(document.getElementById('targetFractions').value);
+
+    if (isNaN(D) || isNaN(n) || isNaN(ab) || isNaN(nPrime)) {
+      showError('Please fill in all four fields before calculating.');
+      return;
+    }
+    if (D <= 0 || n < 1 || ab <= 0 || nPrime < 1) {
+      showError('All values must be positive. Number of fractions must be at least 1.');
+      return;
+    }
+
+    const d    = D / n;
+    const BED  = D * (1 + d / ab);
+    const EQD2 = BED / (1 + 2 / ab);
+
+    // Solve D' quadratically: D'^2/(n'·ab) + D' - BED = 0
+    const a      = 1 / (nPrime * ab);
+    const disc   = 1 + 4 * a * BED;
+    const Dprime = (-1 + Math.sqrt(disc)) / (2 * a);
+    const dPrime = Dprime / nPrime;
+
+    document.getElementById('bedValue').textContent      = BED.toFixed(2);
+    document.getElementById('eqd2Value').textContent     = EQD2.toFixed(2);
+    document.getElementById('convertedDose').textContent = Dprime.toFixed(2);
+    document.getElementById('convertedDetails').innerHTML =
+      `${nPrime} fractions<br>` +
+      `${dPrime.toFixed(3)} Gy per fraction`;
+
+    document.getElementById('summaryLine').innerHTML =
+      `<strong>${D} Gy / ${n} fractions</strong> has an equivalent BED to ` +
+      `<strong>${Dprime.toFixed(2)} Gy / ${nPrime} fractions</strong> (${dPrime.toFixed(3)} Gy per fraction).`;
+
+    document.getElementById('results').classList.add('visible');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+
+  // ── MSKCC Nomogram ──────────────────────────────────────────────────────────
+
+  // PSA restricted cubic spline knots
+  const K1=0.2, K2=4.8, K3=7.35, K4=307;
+
+  function rcs(psa) {
+    const m = x => Math.max(x, 0);
+    const sp1 = (m(psa-K1)**3 - m(psa-K3)**3 * ((K4-K1)/(K4-K3)) + m(psa-K4)**3 * ((K3-K1)/(K4-K3)));
+    const sp2 = (m(psa-K2)**3 - m(psa-K3)**3 * ((K4-K2)/(K4-K3)) + m(psa-K4)**3 * ((K3-K2)/(K4-K3)));
+    return { sp1, sp2 };
+  }
+
+  // Gleason sum → Grade Group
+  function gradeGroup(g1, g2) {
+    const sum = g1 + g2;
+    if (sum <= 6)  return 1;
+    if (g1===3 && g2===4) return 2;
+    if (g1===4 && g2===3) return 3;
+    if (sum===8)   return 4;
+    return 5; // sum 9-10
+  }
+
+  // Stage indicator helpers
+  function stageVars(stage) {
+    return {
+      s2a: stage==='2a' ? 1:0,
+      s2b: stage==='2b' ? 1:0,
+      s2c: stage==='2c' ? 1:0,
+      s3:  stage==='3'  ? 1:0,
+    };
+  }
+
+  function ggVars(gg) {
+    return { gg2: gg===2?1:0, gg3: gg===3?1:0, gg4: gg===4?1:0, gg5: gg===5?1:0 };
+  }
+
+  // Logistic prediction
+  function logistic(xb) { return Math.exp(xb) / (1 + Math.exp(xb)); }
+
+  // Weibull survival at time t given Xβ and γ (scaling param)
+  function weibullSurv(xb, gamma, t) {
+    return Math.exp(-Math.exp(-xb) * t**(1/gamma));
+  }
+
+  // Conditional Weibull: P(T>t | T>tStar)
+  function weibullCond(xb, gamma, t, tStar) {
+    const eNegXb = Math.exp(-xb);
+    const num = 1 + Math.pow(eNegXb * tStar, 1/gamma);
+    const den = 1 + Math.pow(eNegXb * t,     1/gamma);
+    return num / den;
+  }
+
+  function calcNomogram() {
+    // Clear errors
+    const errEl = document.getElementById('n_errorMsg');
+    errEl.classList.remove('visible');
+    document.getElementById('n_results').classList.remove('visible');
+
+    const age   = parseFloat(document.getElementById('n_age').value);
+    const psa   = parseFloat(document.getElementById('n_psa').value);
+    const stageRaw = document.getElementById('n_stage').value;   // may be ''
+    const g1Raw    = document.getElementById('n_g1').value;      // may be ''
+    const g2Raw    = document.getElementById('n_g2').value;      // may be ''
+    const pos   = parseFloat(document.getElementById('n_pos').value);
+    const total = parseFloat(document.getElementById('n_total').value);
+
+    if ([age, psa, pos, total].some(isNaN)) {
+      errEl.textContent = 'Please fill in Age, PSA, Positive Cores, and Total Cores.';
+      errEl.classList.add('visible');
+      return;
+    }
+    if (psa <= 0 || age < 18 || pos < 0 || total < 1 || pos > total) {
+      errEl.textContent = 'Please check your inputs: PSA must be >0, positive cores cannot exceed total cores.';
+      errEl.classList.add('visible');
+      return;
+    }
+    // If only one Gleason pattern is entered, require both
+    if ((g1Raw === '') !== (g2Raw === '')) {
+      errEl.textContent = 'Please enter both Gleason primary and secondary patterns, or leave both blank.';
+      errEl.classList.add('visible');
+      return;
+    }
+
+    const neg   = total - pos;
+    // Optional: default to reference category (T1c / GG1) if blank — coefficients for those are 0
+    const stage = stageRaw || '1';
+    const g1    = g1Raw ? parseInt(g1Raw) : 3;
+    const g2    = g2Raw ? parseInt(g2Raw) : 3;
+
+    const gg  = gradeGroup(g1, g2);
+    const { sp1, sp2 } = rcs(psa);
+    const { s2a, s2b, s2c, s3 } = stageVars(stage);
+    const { gg2, gg3, gg4, gg5 } = ggVars(gg);
+
+    // ── BCR (Cores) survival model ──────────────────────────────────
+    const bcrXb = 6.27240656
+      + age * -0.0055112
+      + psa * -0.44297705
+      + sp1 * 0.003802
+      + sp2 * -0.01059234
+      + gg2 * -1.03528693
+      + gg3 * -2.01205601
+      + gg4 * -2.41622722
+      + gg5 * -2.7369239
+      + s2a * -0.2653079
+      + s2b * -0.55098723
+      + s2c * -0.53710672
+      + s3  * -0.90153
+      + pos * -0.04892766
+      + neg *  0.04203013;
+    const bcrGamma = 1.04739984;
+
+    const pfs5  = weibullCond(bcrXb, bcrGamma, 5,  0) * 100;
+    const pfs10 = weibullCond(bcrXb, bcrGamma, 10, 0) * 100;
+
+    // BCR-free at 5 years (needed for cancer death model)
+    const bcrAt5 = weibullCond(bcrXb, bcrGamma, 5, 0);
+
+    // ── Cancer-specific death (Cores) model ─────────────────────────
+    // Covariate = BCR-free survival at 5 years
+    const deathXb = 2.52051841 + bcrAt5 * 2.15978642;
+    const deathGamma = 0.39659503;
+    // 15-year prostate cancer–specific survival
+    const css15 = weibullCond(deathXb, deathGamma, 15, 0) * 100;
+
+    // ── Pathologic stage logistic models (Cores) ────────────────────
+    // Organ confined
+    const ocXb = 4.03916815
+      + age * -0.03091248
+      + psa * -0.23245617
+      + sp1 *  0.00152155
+      + sp2 * -0.00419601
+      + gg2 * -0.66445702
+      + gg3 * -1.14834872
+      + gg4 * -1.20528662
+      + gg5 * -2.1840382
+      + s2a * -0.22318145
+      + s2b * -0.752952
+      + s2c * -0.51980437
+      + s3  * -1.51243948
+      + pos * -0.08434317
+      + neg *  0.06529789;
+    const pOC = logistic(ocXb) * 100;
+
+    // Extracapsular extension
+    const eceXb = -4.14615912
+      + age *  0.03263727
+      + psa *  0.22419499
+      + sp1 * -0.00151357
+      + sp2 *  0.0041806
+      + gg2 *  0.62975509
+      + gg3 *  1.04483516
+      + gg4 *  1.11988728
+      + gg5 *  2.04021401
+      + s2a *  0.21016394
+      + s2b *  0.7631916
+      + s2c *  0.56884638
+      + s3  *  1.46007476
+      + pos *  0.08760181
+      + neg * -0.06353104;
+    const pECE = logistic(eceXb) * 100;
+
+    // Seminal vesicle invasion
+    const sviXb = -6.11427809
+      + age *  0.02483733
+      + psa *  0.1475095
+      + sp1 * -0.00085465
+      + sp2 *  0.00234133
+      + gg2 *  1.11283762
+      + gg3 *  1.89864418
+      + gg4 *  2.06573755
+      + gg5 *  2.97808178
+      + s2a *  0.13563953
+      + s2b *  0.43790414
+      + s2c *  0.67764059
+      + s3  *  0.80895957
+      + pos *  0.07682603
+      + neg * -0.10972019;
+    const pSVI = logistic(sviXb) * 100;
+
+    // Lymph node involvement
+    const lniXb = -5.37408605
+      + age *  0.01061319
+      + psa *  0.22266602
+      + sp1 * -0.00159928
+      + sp2 *  0.00441175
+      + gg2 *  0.99889717
+      + gg3 *  2.03362879
+      + gg4 *  2.17702562
+      + gg5 *  2.87515732
+      + s2a *  0.17084652
+      + s2b *  0.49919005
+      + s2c *  0.46102494
+      + s3  *  0.74403104
+      + pos *  0.05972006
+      + neg * -0.09466818;
+    const pLNI = logistic(lniXb) * 100;
+
+    // Display
+    document.getElementById('n_pfs5').textContent  = Math.round(pfs5);
+    document.getElementById('n_pfs10').textContent = Math.round(pfs10);
+    document.getElementById('n_css15').textContent = Math.round(css15);
+    document.getElementById('n_oc').textContent    = Math.round(pOC);
+    document.getElementById('n_ece').textContent   = Math.round(pECE);
+    document.getElementById('n_svi').textContent   = Math.round(pSVI);
+    document.getElementById('n_lni').textContent   = Math.round(pLNI);
+
+    document.getElementById('n_results').classList.add('visible');
+    document.getElementById('n_results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Post-operative Nomogram ──────────────────────────────────────────────────
+
+  function calcPostopNomogram() {
+    const errEl = document.getElementById('po_errorMsg');
+    errEl.classList.remove('visible');
+    document.getElementById('po_results').classList.remove('visible');
+
+    // ── Read all inputs fresh from DOM ──────────────────────────────
+    const age      = parseFloat(document.getElementById('po_age').value);
+    const psa      = parseFloat(document.getElementById('po_psa').value);
+    const months   = parseFloat(document.getElementById('po_months').value);
+    const cstageRaw = document.getElementById('po_cstage').value;
+    const bg1Raw    = document.getElementById('po_bg1').value;
+    const bg2Raw    = document.getElementById('po_bg2').value;
+    const pg1Raw    = document.getElementById('po_pg1').value;
+    const pg2Raw    = document.getElementById('po_pg2').value;
+    const marginRaw = document.getElementById('po_margin').value;
+    const eceRaw    = document.getElementById('po_ece').value;
+    const sviRaw    = document.getElementById('po_svi').value;
+    const lniRaw    = document.getElementById('po_lni').value;
+
+    // ── Validation ──────────────────────────────────────────────────
+    if ([age, psa, months].some(isNaN) || psa <= 0 || age < 18 || months < 0) {
+      errEl.textContent = 'Please fill in a valid age (≥18), PSA (>0), and months since surgery (≥0).';
+      errEl.classList.add('visible');
+      return;
+    }
+    if ([pg1Raw, pg2Raw, marginRaw, eceRaw, sviRaw, lniRaw].some(v => v === '')) {
+      errEl.textContent = 'Please fill in all pathologic and surgical findings.';
+      errEl.classList.add('visible');
+      return;
+    }
+    const nOptFilled = [cstageRaw, bg1Raw, bg2Raw].filter(v => v !== '').length;
+    if (nOptFilled > 0 && nOptFilled < 3) {
+      errEl.textContent = 'Please fill in all three optional pre-operative fields (clinical stage and both biopsy Gleason patterns), or leave all three blank.';
+      errEl.classList.add('visible');
+      return;
+    }
+
+    // ── Determine model based on whether optional fields are filled ──
+    const useClinicaModel = nOptFilled === 3;
+
+    // ── Parse values ────────────────────────────────────────────────
+    const pg1    = parseInt(pg1Raw);
+    const pg2    = parseInt(pg2Raw);
+    const margin = parseInt(marginRaw);
+    const ece    = parseInt(eceRaw);
+    const svi    = parseInt(sviRaw);
+    const lni    = parseInt(lniRaw);
+
+    const pgg = gradeGroup(pg1, pg2);
+    const { gg2: pgg2, gg3: pgg3, gg4: pgg4, gg5: pgg5 } = ggVars(pgg);
+    const { sp1, sp2 } = rcs(psa);
+    const tStar = months / 12;
+
+    // ── Compute BCR linear predictor ────────────────────────────────
+    let bcrXb, bcrGamma;
+
+    if (useClinicaModel) {
+      const bg1    = parseInt(bg1Raw);
+      const bg2    = parseInt(bg2Raw);
+      const bgg    = gradeGroup(bg1, bg2);
+      const { gg2: bgg2, gg3: bgg3, gg4: bgg4, gg5: bgg5 } = ggVars(bgg);
+      const { s2a, s2b, s2c, s3 } = stageVars(cstageRaw);
+
+      bcrXb = 5.80317571
+        + age    *  0.00659938
+        + psa    * -0.29742375
+        + sp1    *  0.00273208
+        + sp2    * -0.00763149
+        + bgg2   * -0.58866908
+        + bgg3   * -0.90843098
+        + bgg4   * -0.99959129
+        + bgg5   * -0.69624139
+        + pgg2   * -0.76073847
+        + pgg3   * -1.54991787
+        + pgg4   * -1.91327328
+        + pgg5   * -2.11797312
+        + s2a    * -0.16596296
+        + s2b    * -0.329596
+        + s2c    * -0.27157588
+        + s3     * -0.34163213
+        + ece    * -0.60889233
+        + svi    * -0.45156925
+        + lni    * -1.17087938
+        + margin * -0.93135164;
+      bcrGamma = 0.93808757;
+    } else {
+      bcrXb = 5.76763364
+        + age    *  0.00310155
+        + psa    * -0.28599905
+        + sp1    *  0.0025746
+        + sp2    * -0.0071869
+        + pgg2   * -1.10495679
+        + pgg3   * -2.15504092
+        + pgg4   * -2.68503229
+        + pgg5   * -2.73858376
+        + ece    * -0.66726362
+        + svi    * -0.46645624
+        + lni    * -1.222055
+        + margin * -0.93530105;
+      bcrGamma = 0.95008472;
+    }
+
+    // ── BCR-free survival ───────────────────────────────────────────
+    const pfs5  = tStar < 5  ? weibullCond(bcrXb, bcrGamma, 5,  tStar) * 100 : null;
+    const pfs10 = tStar < 10 ? weibullCond(bcrXb, bcrGamma, 10, tStar) * 100 : null;
+
+    // ── Cancer-specific survival (death model) ──────────────────────
+    const bcrAt5 = weibullCond(bcrXb, bcrGamma, 5, 0);
+    let deathXb, deathGamma;
+    if (useClinicaModel) {
+      deathXb    = 2.67586514 + bcrAt5 * 2.07513814;
+      deathGamma = 0.38866893;
+    } else {
+      deathXb    = 2.66820518 + bcrAt5 * 2.08360974;
+      deathGamma = 0.39225346;
+    }
+    const css15 = tStar < 15 ? weibullCond(deathXb, deathGamma, 15, tStar) * 100 : null;
+
+    // ── Display ─────────────────────────────────────────────────────
+    const fmt = val => val === null ? 'N/A' : Math.round(val);
+    document.getElementById('po_pfs5').textContent  = fmt(pfs5);
+    document.getElementById('po_pfs10').textContent = fmt(pfs10);
+    document.getElementById('po_css15').textContent = fmt(css15);
+
+    const condNote = tStar > 0
+      ? `Results are conditional on being recurrence-free at ${months} months (${tStar.toFixed(1)} years) after surgery.`
+      : 'Results shown from time of surgery.';
+    document.getElementById('po_condNote').textContent = condNote;
+
+    document.getElementById('po_results').classList.add('visible');
+    document.getElementById('po_results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+
+  // ── PSA Doubling Time Calculator ─────────────────────────────────────────────
+
+  let psaImageBase64 = null;
+  let psaImageMime   = null;
+
+  function handlePsaPaste(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        psaImageMime = item.type;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          psaImageBase64 = ev.target.result.split(',')[1];
+          // Place the image inline in the paste box, replacing any existing content
+          const box = document.getElementById('psaPasteBox');
+          box.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; display:block; border-radius:4px;">`;
+          clearPsaResults();
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+    }
+    // No image in clipboard — block text and show error
+    e.preventDefault();
+    showPsaError('Please paste an image (e.g. from the Snipping Tool). No image was detected in the clipboard.');
+  }
+
+  function clearPsaImage() {
+    psaImageBase64 = null;
+    psaImageMime   = null;
+    document.getElementById('psaPasteBox').innerHTML =
+      '';
+    clearPsaResults();
+  }
+
+  function clearPsaResults() {
+    document.getElementById('psaResults').style.display = 'none';
+    document.getElementById('psaError').classList.remove('visible');
+  }
+
+  function showPsaError(msg) {
+    const el = document.getElementById('psaError');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  async function submitPsaImage() {
+    if (!psaImageBase64) {
+      showPsaError('Please upload an image first.');
+      return;
+    }
+    clearPsaResults();
+
+    const btn = document.getElementById('psaSubmitBtn');
+    btn.textContent = 'Analyzing…';
+    btn.disabled    = true;
+
+    try {
+      const prompt = `You are a medical data extraction assistant. The image shows a PSA (Prostate-Specific Antigen) lab results table.
+
+Your task:
+1. Extract all PSA date/value pairs from the table. Dates may be in MM/DD/YY or MM/DD/YYYY format.
+2. Return ONLY a JSON object in this exact format, with no other text, markdown, or explanation:
+{
+  "readings": [
+    {"date": "MM/DD/YY", "psa": <number>},
+    ...
+  ]
+}
+
+Important rules:
+- Include ALL PSA readings visible in the image, in chronological order.
+- If a date is in MM/DD/YYYY format, convert to MM/DD/YY.
+- PSA values should be numbers (e.g. 0.12, 4.5, 12.3).
+- If you cannot read the image or find no PSA data, return: {"readings": [], "error": "reason"}`;
+
+      const response = await fetch('/.netlify/functions/claude-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: psaImageMime, data: psaImageBase64 } },
+              { type: 'text',  text: prompt }
+            ]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+      const raw = data.content.map(b => b.text || '').join('').trim();
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+
+      if (parsed.error) throw new Error(parsed.error);
+      if (!parsed.readings || parsed.readings.length < 2) {
+        throw new Error('At least 2 PSA readings are needed to calculate doubling time. Please check the image.');
+      }
+
+      // Sort by date
+      const readings = parsed.readings.map(r => ({
+        ...r,
+        dateObj: parseDate(r.date),
+        psa: parseFloat(r.psa)
+      })).filter(r => r.dateObj && !isNaN(r.psa) && r.psa > 0)
+         .sort((a, b) => a.dateObj - b.dateObj);
+
+      if (readings.length < 2) throw new Error('Could not parse enough valid PSA readings from the image.');
+
+      // Calculate PSA doubling time via log-linear regression (ln(PSA) vs time in months)
+      const t0 = readings[0].dateObj.getTime();
+      const xs = readings.map(r => (r.dateObj.getTime() - t0) / (1000 * 60 * 60 * 24 * 30.4375)); // months
+      const ys = readings.map(r => Math.log(r.psa));
+
+      const n   = xs.length;
+      const xMean = xs.reduce((a,b) => a+b, 0) / n;
+      const yMean = ys.reduce((a,b) => a+b, 0) / n;
+      const ssxy  = xs.reduce((s, x, i) => s + (x - xMean) * (ys[i] - yMean), 0);
+      const ssxx  = xs.reduce((s, x)    => s + (x - xMean) ** 2, 0);
+      const slope = ssxy / ssxx;  // ln(PSA) per month
+
+      const doublingTime = Math.log(2) / slope; // months
+
+      // R² for goodness of fit
+      const yHat = xs.map(x => yMean + slope * (x - xMean));
+      const ssTot = ys.reduce((s, y) => s + (y - yMean) ** 2, 0);
+      const ssRes = ys.reduce((s, y, i) => s + (y - yHat[i]) ** 2, 0);
+      const r2 = 1 - ssRes / ssTot;
+
+      // Render table
+      const tableHtml = `
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+              <th style="text-align:left; padding:8px 12px; color:var(--muted); font-size:11px; letter-spacing:0.08em; text-transform:uppercase;">Date</th>
+              <th style="text-align:right; padding:8px 12px; color:var(--muted); font-size:11px; letter-spacing:0.08em; text-transform:uppercase;">PSA (ng/mL)</th>
+              <th style="text-align:right; padding:8px 12px; color:var(--muted); font-size:11px; letter-spacing:0.08em; text-transform:uppercase;">Months elapsed</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${readings.map((r, i) => `
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:8px 12px;">${r.date}</td>
+                <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.psa.toFixed(2)}</td>
+                <td style="padding:8px 12px; text-align:right; color:var(--muted);">${xs[i].toFixed(1)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      document.getElementById('psaTable').innerHTML = tableHtml;
+
+      // Display doubling time
+      const dtDisplay = doublingTime > 0
+        ? doublingTime.toFixed(1)
+        : '—';
+      document.getElementById('psaDT').textContent = doublingTime > 0 ? dtDisplay : 'Rising';
+      document.getElementById('psaDTDetail').innerHTML =
+        `n = ${readings.length} readings<br>` +
+        `Slope: ${(slope * Math.log10(Math.E) * Math.log(10)).toFixed(4)} log₁₀(PSA)/month<br>` +
+        `R² = ${r2.toFixed(3)}<br>` +
+        `${doublingTime < 0 ? '<span style="color:var(--danger)">PSA is falling — doubling time not applicable</span>' : ''}`;
+
+      // Interpretation
+      let interp = '';
+      if (doublingTime <= 0) {
+        interp = 'PSA values are decreasing over this time period — a doubling time cannot be calculated.';
+      } else if (doublingTime < 3) {
+        interp = `<strong>PSA-DT ${dtDisplay} months</strong> — Very rapid doubling time (&lt;3 months). This is associated with aggressive disease and high risk of metastatic progression.`;
+      } else if (doublingTime < 9) {
+        interp = `<strong>PSA-DT ${dtDisplay} months</strong> — Short doubling time (3–9 months). Associated with elevated risk of clinical progression; close monitoring and consideration of systemic therapy is typically warranted.`;
+      } else if (doublingTime < 15) {
+        interp = `<strong>PSA-DT ${dtDisplay} months</strong> — Intermediate doubling time (9–15 months). Warrants close monitoring.`;
+      } else {
+        interp = `<strong>PSA-DT ${dtDisplay} months</strong> — Slower doubling time (&gt;15 months). Generally associated with more indolent disease kinetics.`;
+      }
+      if (r2 < 0.85) {
+        interp += ` <em style="color:var(--muted)">(Note: R² = ${r2.toFixed(2)} — the log-linear fit is imperfect, which may reflect biological variability or PSA fluctuation. Interpret with caution.)</em>`;
+      }
+      document.getElementById('psaInterpretation').innerHTML = interp;
+      document.getElementById('psaResults').style.display = 'block';
+      document.getElementById('psaResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (err) {
+      showPsaError('Error: ' + err.message);
+    } finally {
+      btn.textContent = 'Analyze with Claude';
+      btn.disabled    = false;
+    }
+  }
+
+
+  // ── Shared AI Autofill helpers ──────────────────────────────────────────────
+
+  let preop_imageBase64 = null, preop_imageMime = null, preop_pendingText = '';
+  let postop_imageBase64 = null, postop_imageMime = null, postop_pendingText = '';
+
+  function handlePreopPaste(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        preop_imageMime = item.type;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          preop_imageBase64 = ev.target.result.split(',')[1];
+          preop_pendingText = '';
+          const box = document.getElementById('preop_pasteBox');
+          box.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; display:block; border-radius:4px;">`;
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+    }
+    // Text paste — let browser handle it, JS picks it up via oninput
+  }
+
+  function handlePostopPaste(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        postop_imageMime = item.type;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          postop_imageBase64 = ev.target.result.split(',')[1];
+          postop_pendingText = '';
+          const box = document.getElementById('postop_pasteBox');
+          box.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; display:block; border-radius:4px;">`;
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+    }
+  }
+
+  function clearPreopAI() {
+    preop_imageBase64 = null; preop_imageMime = null; preop_pendingText = '';
+    document.getElementById('preop_pasteBox').innerHTML = 'Paste a clinical summary or screenshot here (Ctrl+V / ⌘+V)…';
+    document.getElementById('preop_aiError').classList.remove('visible');
+    document.getElementById('preop_aiSuccess').style.display = 'none';
+  }
+
+  function clearPostopAI() {
+    postop_imageBase64 = null; postop_imageMime = null; postop_pendingText = '';
+    document.getElementById('postop_pasteBox').innerHTML = 'Paste a clinical summary or screenshot here (Ctrl+V / ⌘+V)…';
+    document.getElementById('postop_aiError').classList.remove('visible');
+    document.getElementById('postop_aiSuccess').style.display = 'none';
+  }
+
+  function setSelectIfValid(id, value) {
+    const el = document.getElementById(id);
+    if (!el || value === null || value === undefined) return false;
+    const opts = Array.from(el.options).map(o => o.value);
+    if (opts.includes(String(value))) { el.value = String(value); return true; }
+    return false;
+  }
+
+  function setInputIfValid(id, value) {
+    const el = document.getElementById(id);
+    if (!el || value === null || value === undefined || value === '') return false;
+    el.value = value;
+    return true;
+  }
+
+  // ── Pre-op AI Autofill ──────────────────────────────────────────────────────
+
+  async function submitPreopAI() {
+    const textInput = document.getElementById('preop_pasteBox').innerText.trim();
+    const hasText = textInput && textInput !== 'Paste a clinical summary or screenshot here (Ctrl+V / ⌘+V)…';
+    const hasImage = !!preop_imageBase64;
+
+    if (!hasText && !hasImage) {
+      const err = document.getElementById('preop_aiError');
+      err.textContent = 'Please paste a clinical summary or screenshot first.';
+      err.classList.add('visible');
+      return;
+    }
+
+    document.getElementById('preop_aiError').classList.remove('visible');
+    document.getElementById('preop_aiSuccess').style.display = 'none';
+    const btn = document.getElementById('preop_aiBtn');
+    btn.textContent = 'Analyzing…'; btn.disabled = true;
+
+    const systemPrompt = `You are a clinical data extraction assistant for a prostate cancer nomogram calculator.
+Extract the following fields from the provided clinical text or image and return ONLY a JSON object with no markdown, no preamble:
+{
+  "age": <number or null>,
+  "psa": <number or null>,
+  "stage": <"1" for T1c, "2a" for T2a, "2b" for T2b, "2c" for T2c, "3" for T3+, or null>,
+  "gleason_primary": <3, 4, or 5, or null>,
+  "gleason_secondary": <3, 4, or 5, or null>,
+  "positive_cores": <number or null>,
+  "total_cores": <number or null>,
+  "notes": "<brief plain-English summary of what you found>"
+}
+Rules:
+- For stage: T1c→"1", T2a→"2a", T2b→"2b", T2c→"2c", T3 or higher→"3"
+- Gleason grade group 1=3+3, group 2=3+4, group 3=4+3, group 4=4+4, group 5=4+5 or 5+4 or 5+5
+- If a field is not mentioned, set it to null
+- Return ONLY the JSON, nothing else`;
+
+    try {
+      const contentBlocks = [];
+      if (hasImage) {
+        contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: preop_imageMime, data: preop_imageBase64 } });
+        contentBlocks.push({ type: 'text', text: 'Extract the pre-operative nomogram fields from this clinical image.' });
+      } else {
+        contentBlocks.push({ type: 'text', text: textInput });
+      }
+
+      const response = await fetch('/.netlify/functions/claude-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: contentBlocks }]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+      const raw = data.content.map(b => b.text || '').join('').trim();
+      const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+      // Populate fields
+      const filled = [];
+      if (setInputIfValid('n_age', parsed.age)) filled.push(`Age: ${parsed.age}`);
+      if (setInputIfValid('n_psa', parsed.psa)) filled.push(`PSA: ${parsed.psa} ng/mL`);
+      if (setSelectIfValid('n_stage', parsed.stage)) filled.push(`Stage: T${parsed.stage === '1' ? '1c' : parsed.stage === '3' ? '3+' : parsed.stage}`);
+      if (setSelectIfValid('n_g1', parsed.gleason_primary)) filled.push(`Gleason primary: ${parsed.gleason_primary}`);
+      if (setSelectIfValid('n_g2', parsed.gleason_secondary)) filled.push(`Gleason secondary: ${parsed.gleason_secondary}`);
+      if (setInputIfValid('n_pos', parsed.positive_cores)) filled.push(`Positive cores: ${parsed.positive_cores}`);
+      if (setInputIfValid('n_total', parsed.total_cores)) filled.push(`Total cores: ${parsed.total_cores}`);
+
+      const successEl = document.getElementById('preop_aiSuccess');
+      successEl.innerHTML = `<em style="color:var(--muted)">${parsed.notes || ''}</em><br><span style="color:var(--muted);font-size:11px;">Please verify all values before calculating.</span>`;
+      errEl.textContent = 'Error: ' + err.message;
+      errEl.classList.add('visible');
+    } finally {
+      btn.textContent = 'Auto-fill with Claude'; btn.disabled = false;
+    }
+  }
+
+  // ── Post-op AI Autofill ─────────────────────────────────────────────────────
+
+  async function submitPostopAI() {
+    const textInput = document.getElementById('postop_pasteBox').innerText.trim();
+    const hasText = textInput && textInput !== 'Paste a clinical summary or screenshot here (Ctrl+V / ⌘+V)…';
+    const hasImage = !!postop_imageBase64;
+
+    if (!hasText && !hasImage) {
+      const err = document.getElementById('postop_aiError');
+      err.textContent = 'Please paste a clinical summary or screenshot first.';
+      err.classList.add('visible');
+      return;
+    }
+
+    document.getElementById('postop_aiError').classList.remove('visible');
+    document.getElementById('postop_aiSuccess').style.display = 'none';
+    const btn = document.getElementById('postop_aiBtn');
+    btn.textContent = 'Analyzing…'; btn.disabled = true;
+
+    const systemPrompt = `You are a clinical data extraction assistant for a post-operative prostate cancer nomogram calculator.
+Extract the following fields from the clinical text or image and return ONLY a JSON object with no markdown, no preamble:
+{
+  "age": <number or null>,
+  "preop_psa": <number or null>,
+  "months_since_surgery": <number or null>,
+  "preop_clinical_stage": <"1" for T1c, "2a" for T2a, "2b" for T2b, "2c" for T2c, "3" for T3+, or null>,
+  "biopsy_gleason_primary": <3, 4, or 5, or null>,
+  "biopsy_gleason_secondary": <3, 4, or 5, or null>,
+  "path_gleason_primary": <3, 4, or 5, or null>,
+  "path_gleason_secondary": <3, 4, or 5, or null>,
+  "surgical_margin": <"0" for negative, "1" for positive, or null>,
+  "ece": <"0" for absent, "1" for present, or null>,
+  "svi": <"0" for absent, "1" for present, or null>,
+  "lni": <"0" for absent, "1" for present, or null>,
+  "notes": "<brief plain-English summary of what you found>"
+}
+Rules:
+- For stage: T1c→"1", T2a→"2a", T2b→"2b", T2c→"2c", T3+→"3"
+- ECE = extracapsular extension, SVI = seminal vesicle invasion, LNI = lymph node involvement
+- If a field is not mentioned, set it to null
+- Return ONLY the JSON, nothing else`;
+
+    try {
+      const contentBlocks = [];
+      if (hasImage) {
+        contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: postop_imageMime, data: postop_imageBase64 } });
+        contentBlocks.push({ type: 'text', text: 'Extract the post-operative nomogram fields from this clinical image.' });
+      } else {
+        contentBlocks.push({ type: 'text', text: textInput });
+      }
+
+      const response = await fetch('/.netlify/functions/claude-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: contentBlocks }]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+      const raw = data.content.map(b => b.text || '').join('').trim();
+      const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+      const filled = [];
+      if (setInputIfValid('po_age', parsed.age)) filled.push(`Age: ${parsed.age}`);
+      if (setInputIfValid('po_psa', parsed.preop_psa)) filled.push(`Pre-op PSA: ${parsed.preop_psa}`);
+      if (setInputIfValid('po_months', parsed.months_since_surgery)) filled.push(`Months post-op: ${parsed.months_since_surgery}`);
+      if (setSelectIfValid('po_cstage', parsed.preop_clinical_stage)) filled.push(`Pre-op stage: T${parsed.preop_clinical_stage === '1' ? '1c' : parsed.preop_clinical_stage === '3' ? '3+' : parsed.preop_clinical_stage}`);
+      if (setSelectIfValid('po_bg1', parsed.biopsy_gleason_primary)) filled.push(`Biopsy Gleason ${parsed.biopsy_gleason_primary}`);
+      if (setSelectIfValid('po_bg2', parsed.biopsy_gleason_secondary)) filled.push(`+${parsed.biopsy_gleason_secondary}`);
+      if (setSelectIfValid('po_pg1', parsed.path_gleason_primary)) filled.push(`Path Gleason ${parsed.path_gleason_primary}`);
+      if (setSelectIfValid('po_pg2', parsed.path_gleason_secondary)) filled.push(`+${parsed.path_gleason_secondary}`);
+      if (setSelectIfValid('po_margin', parsed.surgical_margin)) filled.push(`Margins: ${parsed.surgical_margin === '0' ? 'negative' : 'positive'}`);
+      if (setSelectIfValid('po_ece', parsed.ece)) filled.push(`ECE: ${parsed.ece === '0' ? 'absent' : 'present'}`);
+      if (setSelectIfValid('po_svi', parsed.svi)) filled.push(`SVI: ${parsed.svi === '0' ? 'absent' : 'present'}`);
+      if (setSelectIfValid('po_lni', parsed.lni)) filled.push(`LNI: ${parsed.lni === '0' ? 'absent' : 'present'}`);
+
+      const successEl = document.getElementById('postop_aiSuccess');
+      successEl.innerHTML = `<em style="color:var(--muted)">${parsed.notes || ''}</em><br><span style="color:var(--muted);font-size:11px;">Please verify all values before calculating.</span>`;
+      successEl.style.display = 'block';
+
+    } catch (err) {
+      const errEl = document.getElementById('postop_aiError');
+      errEl.textContent = 'Error: ' + err.message;
+      errEl.classList.add('visible');
+    } finally {
+      btn.textContent = 'Auto-fill with Claude'; btn.disabled = false;
+    }
+  }
+
+  function parseDate(str) {
+    if (!str) return null;
+    // Handle MM/DD/YY and MM/DD/YYYY
+    const parts = str.split('/');
+    if (parts.length !== 3) return null;
+    let [m, d, y] = parts.map(Number);
+    if (y < 100) y += y < 50 ? 2000 : 1900;
+    const date = new Date(y, m - 1, d);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+</script>
+</body>
+</html>
